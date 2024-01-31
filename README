@@ -1,9 +1,1 @@
-NEWS
-----
-
-Squashfs-tools 4.6.1 released (25th March 2023)
-
-If you like the recent releases please "star" the
-project.
-
-Thanks
+Fork of squashfs-tools, working with special characters.
