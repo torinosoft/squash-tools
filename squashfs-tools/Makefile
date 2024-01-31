@@ -389,11 +389,11 @@ YEAR := $(firstword $(subst /, , $(DATE)))
 CFLAGS += -DVERSION=\"$(VERSION)\" -DDATE=\"$(DATE)\" -DYEAR=\"$(YEAR)\"
 
 .PHONY: all
-all: mksquashfs unsquashfs
+all: mksquash unsquash
 
-mksquashfs: $(MKSQUASHFS_OBJS)
+mksquash: $(MKSQUASHFS_OBJS)
 	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) $(MKSQUASHFS_OBJS) $(LIBS) -o $@
-	ln -sf mksquashfs sqfstar
+	ln -sf mksquash sqtar
 
 mksquashfs.o: Makefile mksquashfs.c squashfs_fs.h squashfs_swap.h mksquashfs.h \
 	sort.h pseudo.h compressor.h xattr.h action.h mksquashfs_error.h progressbar.h \
@@ -454,9 +454,9 @@ xz_wrapper.o: xz_wrapper.c squashfs_fs.h xz_wrapper.h compressor.h
 
 xz_wrapper_extended.o: xz_wrapper_extended.c squashfs_fs.h xz_wrapper.h compressor.h
 
-unsquashfs: $(UNSQUASHFS_OBJS)
+unsquash: $(UNSQUASHFS_OBJS)
 	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) $(UNSQUASHFS_OBJS) $(LIBS) -o $@
-	ln -sf unsquashfs sqfscat
+	ln -sf unsquash sqcat
 
 unsquashfs.o: unsquashfs.h unsquashfs.c squashfs_fs.h squashfs_swap.h \
 	squashfs_compat.h xattr.h read_fs.h compressor.h unsquashfs_error.h
@@ -484,13 +484,13 @@ unsquashfs_info.o: unsquashfs.h squashfs_fs.h unsquashfs_error.h
 
 .PHONY: clean
 clean:
-	-rm -f *.o mksquashfs unsquashfs sqfstar sqfscat *.1
+	-rm -f *.o mksquash unsquash sqtar sqcat *.1
 
 .PHONY: install
-install: mksquashfs unsquashfs
+install: mksquash unsquash
 	mkdir -p $(INSTALL_DIR)
-	cp mksquashfs $(INSTALL_DIR)
-	cp unsquashfs $(INSTALL_DIR)
-	ln -fs unsquashfs $(INSTALL_DIR)/sqfscat
-	ln -fs mksquashfs $(INSTALL_DIR)/sqfstar
+	cp mksquash $(INSTALL_DIR)
+	cp unsquash $(INSTALL_DIR)
+	ln -fs unsquash $(INSTALL_DIR)/sqcat
+	ln -fs mksquash $(INSTALL_DIR)/sqtar
 	../generate-manpages/install-manpages.sh $(shell pwd)/.. "$(INSTALL_MANPAGES_DIR)" "$(USE_PREBUILT_MANPAGES)"

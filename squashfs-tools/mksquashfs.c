@@ -4032,7 +4032,7 @@ static void dir_scan2(struct dir_info *dir, struct pseudo *pseudo)
 		if((!appending || dir->depth != 1) && !empty)
 			dir_ent = lookup_name(dir, pseudo_ent->name);
 
-		if(pseudo_ent->dev->type == 'm' || pseudo_ent->dev->type == 'M') {
+		if(dir_ent || pseudo_ent->dev->type == 'm' || pseudo_ent->dev->type == 'M') {
 			struct stat *buf;
 			if(dir_ent == NULL) {
 				ERROR_START("Pseudo modify file \"%s\" does "
@@ -4048,14 +4048,6 @@ static void dir_scan2(struct dir_info *dir, struct pseudo *pseudo)
 			buf->st_gid = pseudo_ent->dev->buf->gid;
 			if(pseudo_ent->dev->type == 'M')
 				buf->st_mtime = pseudo_ent->dev->buf->mtime;
-			continue;
-		}
-
-		if(dir_ent) {
-			ERROR_START("Pseudo file \"%s\" exists in source "
-				"filesystem \"%s\".", pseudo_ent->pathname,
-				pathname(dir_ent));
-			ERROR_EXIT("\nIgnoring, exclude it (-e/-ef) to override.\n");
 			continue;
 		}
 

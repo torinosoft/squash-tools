@@ -382,6 +382,64 @@ void print_definitions()
 }
 
 
+static int decode_digit(int so_far, char ** src, int base)
+{
+	char buf[2] = "0";
+	buf[0] = **src;
+	if ( isxdigit(buf[0]) ) {
+		++(*src);
+		return so_far * base + strtol(buf, NULL, base);
+	} else {
+		return so_far;
+	}
+}
+
+
+static int decode_char(char **src, char **dest)
+{
+	int esc = 0;
+	if(*(*src) == '\\') {
+		esc = 1;
+		(*src) ++;
+		if (*(*src) == '\0')
+			return 0;
+	}
+	int c;
+	if ( esc ) {
+		c = *((*src)++);
+		switch ( c ) {
+			case 'a':  c = '\a'; break;
+			case 'b':  c = '\b'; break;
+			case 'E':
+			case 'e':  c = 27;   break;
+			case 'f':  c = '\f'; break;
+			case 'n':  c = '\n'; break;
+			case 'r':  c = '\r'; break;
+			case 't':  c = '\t'; break;
+			case 'v':  c = '\v'; break;
+			case 'x':
+				++(*src);
+				c = decode_digit(0, &(*src), 16);
+				c = decode_digit(c, &(*src), 16);
+				--(*src);
+				break;
+			case '0'...'7':
+				c = decode_digit(0, &(*src), 8);
+				c = decode_digit(c, &(*src), 8);
+				c = decode_digit(c, &(*src), 8);
+				--(*src);
+				break;
+			default:
+				break;
+		}
+	} else {
+		c = *((*src)++);
+	}
+	*((*dest)++) = c;
+	return c;
+}
+
+
 static int read_pseudo_def_pseudo_link(char *orig_def, char *filename, char *name, char *def)
 {
 	char *linkname, *link;
@@ -405,13 +463,9 @@ static int read_pseudo_def_pseudo_link(char *orig_def, char *filename, char *nam
 			def ++;
 			continue;
 		}
-
-		if(*def == '\\') {
-			def ++;
-			if (*def == '\0')
-				break;
+		if ( ! decode_char(&def, &link) ) {
+			break;
 		}
-		*link ++ = *def ++;
 	}
 	*link = '\0';
 
@@ -495,13 +549,10 @@ static int read_pseudo_def_link(char *orig_def, char *filename, char *name, char
 			def ++;
 			continue;
 		}
-
-		if(*def == '\\') {
-			def ++;
-			if (*def == '\0')
-				break;
+		
+		if ( ! decode_char(&def, &link) ) {
+			break;
 		}
-		*link ++ = *def ++;
 	}
 	*link = '\0';
 
@@ -608,12 +659,9 @@ static int read_pseudo_def_extended(char type, char *orig_def, char *filename,
 				continue;
 			}
 
-			if(*def == '\\') {
-				def ++;
-				if (*def == '\0')
-					break;
+			if ( ! decode_char(&def, &str) ) {
+				break;
 			}
-			*str++ = *def ++;
 		}
 		*str = '\0';
 
@@ -1004,11 +1052,8 @@ static int read_pseudo_def_original(char type, char *orig_def, char *filename, c
 		break;
 	case 'f':
 		if(def[0] == '\0') {
-			ERROR("Not enough arguments in dynamic file pseudo "
-				"definition \"%s\"\n", orig_def);
-			ERROR("Expected command, which can be an executable "
-				"or a piece of shell script\n");
-			goto error;
+			type = 'm';
+			break;
 		}	
 		command = def;
 		def += strlen(def);
@@ -1169,12 +1214,9 @@ static int read_pseudo_def(char *def, char *destination, char *pseudo_file, stru
 			continue;
 		}
 
-		if(*def == '\\') {
-			def ++;
-			if (*def == '\0')
-				break;
+		if ( ! decode_char(&def, &name) ) {
+			break;
 		}
-		*name ++ = *def ++;
 	}
 	*name = '\0';
 
@@ -1393,8 +1435,8 @@ static void dump_pseudo(struct pseudo *pseudo, char *string)
 
 void dump_pseudos()
 {
-    if (pseudo)
-        dump_pseudo(pseudo, NULL);
+	if (pseudo)
+		dump_pseudo(pseudo, NULL);
 }
 #else
 void dump_pseudos()
